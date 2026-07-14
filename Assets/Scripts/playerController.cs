@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Collections; // <- CORRECCIÓN 1: Esto quita el error en rojo de tu imagen
+using System.Collections;
 
 public class playerController : MonoBehaviour
 {
@@ -21,28 +21,24 @@ public class playerController : MonoBehaviour
     private Animator animator;
     private bool isDead = false;
 
+    public Vector3 externalMoveSpeed;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
         cameraTransform = Camera.main.transform;
         
-        // Inicializa el Animator buscando en los objetos hijos
         animator = GetComponentInChildren<Animator>(); 
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (isDead) return; // Evita que el jugador se mueva si está muerto
-        bool isGrounded = controller.isGrounded;
+        if (isDead) return;
         
-        // Calcula la magnitud del movimiento
+        bool isGrounded = controller.isGrounded;
         float speedValue = moveInput.magnitude;
 
-        // Envía el valor al parámetro "Speed" del Animator Controller
         animator.SetFloat("Speed", speedValue);
-
-        // Indicamos si es personaje está en el suelo o no, para controlar la animación de salto
         animator.SetBool("IsGrounded", isGrounded);
 
         if (isGrounded && verticalVelocity < 0)
@@ -50,19 +46,14 @@ public class playerController : MonoBehaviour
             verticalVelocity = -2f;
         }
 
-        //salto
         if (jumpPressed && isGrounded)
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
             jumpPressed = false;
-
-            // Activar la animación de salto
             animator.SetTrigger("Jump");
         }
 
         verticalVelocity += gravity * Time.deltaTime;
-
-        // Animación de salto: Calcula la velocidad vertical y la envía al Animator Controller
         animator.SetFloat("VerticalVelocity", verticalVelocity);
 
         // --- MOVIMIENTO RELATIVO A LA CÁMARA ---
@@ -71,7 +62,6 @@ public class playerController : MonoBehaviour
 
         forward.y = 0f;
         right.y = 0f;
-
         forward.Normalize();
         right.Normalize();
 
@@ -84,11 +74,17 @@ public class playerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
-        // Movimiento original
-        Vector3 move = moveDirection.normalized;
-        move.y = verticalVelocity / speed;
+        // --- CORRECCIÓN DE MATEMÁTICAS AQUÍ ---
+        // 1. Movimiento horizontal (teclas/mando)
+        Vector3 horizontalMove = moveDirection.normalized * speed;
+        
+        // 2. Movimiento vertical (gravedad/salto)
+        Vector3 verticalMove = Vector3.up * verticalVelocity;
 
-        controller.Move(move * speed * Time.deltaTime);
+        // 3. Sumamos todo limpiamente y multiplicamos por el tiempo de un solo golpe
+        Vector3 finalMovement = horizontalMove + verticalMove + externalMoveSpeed;
+        
+        controller.Move(finalMovement * Time.deltaTime);
     }
 
     public void OnMove(InputValue value)
@@ -115,12 +111,10 @@ public class playerController : MonoBehaviour
         isDead = true;
         animator.SetTrigger("Die");
         StartCoroutine(RespawnCoutine());
-        
     }
 
     private IEnumerator RespawnCoutine()
     {
-        
         yield return new WaitForSeconds(2f);
 
         controller.enabled = false;
@@ -129,12 +123,9 @@ public class playerController : MonoBehaviour
         verticalVelocity = 0f;
         controller.enabled = true;
         
-        // CORRECCIÓN 2: Cambié "SetTrigger" por "ResetTrigger". 
-        // Esto quita el "saltito" raro/bucle de muerte al reaparecer.
         animator.ResetTrigger("Die"); 
         animator.Play("Locomotion");
 
         isDead = false;
-
     }
 }
