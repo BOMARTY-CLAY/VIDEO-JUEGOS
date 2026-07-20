@@ -27,14 +27,14 @@ public class playerController : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         cameraTransform = Camera.main.transform;
-        
-        animator = GetComponentInChildren<Animator>(); 
+
+        animator = GetComponentInChildren<Animator>();
     }
 
     void Update()
     {
         if (isDead) return;
-        
+
         bool isGrounded = controller.isGrounded;
         float speedValue = moveInput.magnitude;
 
@@ -46,11 +46,17 @@ public class playerController : MonoBehaviour
             verticalVelocity = -2f;
         }
 
-        if (jumpPressed && isGrounded)
+        // SOLUCIÓN AL PROBLEMA DEL SALTO INFINITO
+        if (jumpPressed)
         {
-            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            if (isGrounded)
+            {
+                verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                animator.SetTrigger("Jump");
+            }
+
+            // Reiniciamos la variable siempre para que el input no se acumule
             jumpPressed = false;
-            animator.SetTrigger("Jump");
         }
 
         verticalVelocity += gravity * Time.deltaTime;
@@ -77,13 +83,13 @@ public class playerController : MonoBehaviour
         // --- CORRECCIÓN DE MATEMÁTICAS AQUÍ ---
         // 1. Movimiento horizontal (teclas/mando)
         Vector3 horizontalMove = moveDirection.normalized * speed;
-        
+
         // 2. Movimiento vertical (gravedad/salto)
         Vector3 verticalMove = Vector3.up * verticalVelocity;
 
         // 3. Sumamos todo limpiamente y multiplicamos por el tiempo de un solo golpe
         Vector3 finalMovement = horizontalMove + verticalMove + externalMoveSpeed;
-        
+
         controller.Move(finalMovement * Time.deltaTime);
     }
 
@@ -108,12 +114,25 @@ public class playerController : MonoBehaviour
     public void Die()
     {
         if (isDead) return;
+
         isDead = true;
+
         animator.SetTrigger("Die");
-        StartCoroutine(RespawnCoutine());
+
+        // ELIMINADA LA LÍNEA DEL CAPSULECOLLIDER PARA EVITAR ERRORES
+
+        //Nuevo
+        FloatingEnemyChase[] enemies = FindObjectsByType<FloatingEnemyChase>(FindObjectsSortMode.None);
+
+        foreach (FloatingEnemyChase enemy in enemies)
+        {
+            enemy.ResetEnemy();
+        }
+
+        StartCoroutine(RespawnCoroutine());
     }
 
-    private IEnumerator RespawnCoutine()
+    private IEnumerator RespawnCoroutine()
     {
         yield return new WaitForSeconds(2f);
 
@@ -122,8 +141,8 @@ public class playerController : MonoBehaviour
         transform.position = respawnPosition;
         verticalVelocity = 0f;
         controller.enabled = true;
-        
-        animator.ResetTrigger("Die"); 
+
+        animator.ResetTrigger("Die");
         animator.Play("Locomotion");
 
         isDead = false;
