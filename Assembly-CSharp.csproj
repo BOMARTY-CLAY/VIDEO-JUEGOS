@@ -75,6 +75,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Sowelu Games\VerticalDown_Free3DStarterPack\Documentation\README_VerticalDown_Free3DStarterPack.txt" />
+    <None Include="Assets\ASEETS Y SCRIPS DEL ANTERIOR, MODIFICAR\3D Platformer\navmesh link.txt" />
+    <None Include="Assets\ASEETS Y SCRIPS DEL ANTERIOR, MODIFICAR\3D Platformer\Skybox\Fantasy Skybox FREE\Fog and Ambient references.txt" />
+    <None Include="Assets\ASEETS Y SCRIPS DEL ANTERIOR, MODIFICAR\3D Platformer\credits.txt" />
+    <None Include="Assets\ASEETS Y SCRIPS DEL ANTERIOR, MODIFICAR\3D Platformer\Skybox\Fantasy Skybox FREE\Readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -1331,6 +1335,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="NavMeshComponents.csproj">
+      <Project>{9AD669B4-AC69-7611-2BE5-D1382D5BD617}</Project>
+      <Name>NavMeshComponents</Name>
+    </ProjectReference>
+    <ProjectReference Include="NavMeshComponentsEditor.csproj">
+      <Project>{BA4D10CE-F654-6D2E-09F0-3E30F136422A}</Project>
+      <Name>NavMeshComponentsEditor</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
